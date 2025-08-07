@@ -114,10 +114,10 @@
                                 class="btn btn-outline-primary" title="Voir détails">
                           <i class="fas fa-eye"></i>
                         </button>
-                        <button @click="editApartment(apartment)" 
+                        <router-link :to="`/admin/apartments/edit/${apartment.id}`"
                                 class="btn btn-outline-warning" title="Modifier">
                           <i class="fas fa-edit"></i>
-                        </button>
+                        </router-link>
                         <button @click="deleteApartment(apartment)" 
                                 class="btn btn-outline-danger" title="Supprimer">
                           <i class="fas fa-trash"></i>
@@ -275,11 +275,6 @@ export default {
       this.selectedApartment = apartment
       const modal = new Modal(document.getElementById('apartmentModal'))
       modal.show()
-    },
-    
-    editApartment(apartment) {
-      // TODO: Implémenter l'édition
-      alert('Fonctionnalité d\'édition à implémenter')
     },
     
     deleteApartment(apartment) {

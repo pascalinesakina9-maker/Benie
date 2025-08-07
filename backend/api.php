@@ -281,6 +281,130 @@ try {
             }
             break;
 
+        case 'update_apartment':
+            if ($method === 'POST') {
+                try {
+                    // Récupérer les données JSON ou FormData
+                    $input = file_get_contents('php://input');
+                    $data = json_decode($input, true);
+                    
+                    if (!$data) {
+                        // Si pas de JSON, essayer de récupérer depuis $_POST
+                        $data = $_POST;
+                    }
+                    
+                    $apartment_id = $data['id'] ?? null;
+                    if (!$apartment_id) {
+                        echo json_encode(['success' => false, 'message' => 'ID appartement manquant']);
+                        break;
+                    }
+                    
+                    // Vérifier que l'appartement existe
+                    $query = "SELECT id FROM appartements WHERE id = ?";
+                    $stmt = $db->prepare($query);
+                    $stmt->bindParam(1, $apartment_id);
+                    $stmt->execute();
+                    
+                    if (!$stmt->fetch()) {
+                        echo json_encode(['success' => false, 'message' => 'Appartement introuvable']);
+                        break;
+                    }
+                    
+                    // Mettre à jour l'appartement
+                    $query = "UPDATE appartements SET 
+                             code = ?, 
+                             quartier = ?, 
+                             type = ?, 
+                             nb_chambres = ?, 
+                             description = ?, 
+                             equipements = ?, 
+                             prix_nuit = ?, 
+                             statut = ?
+                             WHERE id = ?";
+                    
+                    $stmt = $db->prepare($query);
+                    $equipements_json = is_array($data['equipements']) ? json_encode($data['equipements']) : $data['equipements'];
+                    
+                    $stmt->execute([
+                        $data['code'],
+                        $data['quartier'],
+                        $data['type'],
+                        $data['nb_chambres'],
+                        $data['description'],
+                        $equipements_json,
+                        $data['prix_nuit'],
+                        $data['statut'] ?? 'disponible',
+                        $apartment_id
+                    ]);
+                    
+                    echo json_encode(['success' => true, 'message' => 'Appartement mis à jour avec succès']);
+                    
+                } catch (Exception $e) {
+                    echo json_encode(['success' => false, 'message' => 'Erreur: ' . $e->getMessage()]);
+                }
+            }
+            break;
+            
+        case 'delete_apartment_image':
+            if ($method === 'POST') {
+                try {
+                    $data = json_decode(file_get_contents('php://input'), true);
+                    $image_id = $data['image_id'] ?? null;
+                    
+                    if (!$image_id) {
+                        echo json_encode(['success' => false, 'message' => 'ID image manquant']);
+                        break;
+                    }
+                    
+                    // Supprimer l'image de la base de données
+                    $query = "DELETE FROM appartement_images WHERE id = ?";
+                    $stmt = $db->prepare($query);
+                    $stmt->bindParam(1, $image_id);
+                    $stmt->execute();
+                    
+                    echo json_encode(['success' => true, 'message' => 'Image supprimée avec succès']);
+                    
+                } catch (Exception $e) {
+                    echo json_encode(['success' => false, 'message' => 'Erreur: ' . $e->getMessage()]);
+                }
+            }
+            break;
+            
+        case 'add_apartment_images':
+            if ($method === 'POST') {
+                try {
+                    $data = json_decode(file_get_contents('php://input'), true);
+                    $apartment_id = $data['apartment_id'] ?? null;
+                    $images = $data['images'] ?? [];
+                    
+                    if (!$apartment_id || empty($images)) {
+                        echo json_encode(['success' => false, 'message' => 'Données manquantes']);
+                        break;
+                    }
+                    
+                    // Obtenir le prochain ordre
+                    $query = "SELECT COALESCE(MAX(ordre), 0) + 1 as next_ordre FROM appartement_images WHERE appartement_id = ?";
+                    $stmt = $db->prepare($query);
+                    $stmt->bindParam(1, $apartment_id);
+                    $stmt->execute();
+                    $next_ordre = $stmt->fetch(PDO::FETCH_ASSOC)['next_ordre'];
+                    
+                    // Ajouter les nouvelles images
+                    $query = "INSERT INTO appartement_images (appartement_id, url, ordre) VALUES (?, ?, ?)";
+                    $stmt = $db->prepare($query);
+                    
+                    foreach ($images as $image_url) {
+                        $stmt->execute([$apartment_id, $image_url, $next_ordre]);
+                        $next_ordre++;
+                    }
+                    
+                    echo json_encode(['success' => true, 'message' => 'Images ajoutées avec succès']);
+                    
+                } catch (Exception $e) {
+                    echo json_encode(['success' => false, 'message' => 'Erreur: ' . $e->getMessage()]);
+                }
+            }
+            break;
         default:
             echo json_encode(['error' => 'Endpoint non trouvé']);
             break;

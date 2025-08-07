@@ -7,6 +7,7 @@ import AdminLogin from '../views/admin/AdminLogin.vue'
 import AdminDashboard from '../views/admin/AdminDashboard.vue'
 import AdminApartments from '../views/admin/AdminApartments.vue'
 import AdminReservations from '../views/admin/AdminReservations.vue'
+import AdminEditApartment from '../views/admin/AdminEditApartment.vue'
 import VerifyQR from '../views/VerifyQR.vue'
 
 const routes = [
@@ -58,6 +59,13 @@ const routes = [
     path: '/admin/reservations',
     name: 'AdminReservations',
     component: AdminReservations,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin/apartments/edit/:id',
+    name: 'AdminEditApartment',
+    component: AdminEditApartment,
+    props: true,
     meta: { requiresAuth: true }
   }
 ]

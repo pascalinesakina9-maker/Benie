@@ -49,5 +49,20 @@ export default {
   // Statistiques
   getStats() {
     return api.get('?entity=stats')
+  },
+
+  // Mise à jour d'appartement
+  updateApartment(id, data) {
+    return api.post('?entity=update_apartment', { ...data, id })
+  },
+
+  // Suppression d'image d'appartement
+  deleteApartmentImage(imageId) {
+    return api.post('?entity=delete_apartment_image', { image_id: imageId })
+  },
+
+  // Ajout d'images à un appartement
+  addApartmentImages(apartmentId, images) {
+    return api.post('?entity=add_apartment_images', { apartment_id: apartmentId, images })
   }
 }
